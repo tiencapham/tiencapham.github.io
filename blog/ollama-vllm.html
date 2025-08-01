@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Building a Local VLLM Agent with Ollama and Streamlit</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f4f4f9;
+      color: #333;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    pre {
+      background: #eaeaea;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    code {
+      font-family: monospace;
+      background: #f9f9f9;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+    }
+    a {
+      color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 Building a Local Vision-Language Model Agent with Ollama and Streamlit</h1>
+
+  <p>As AI systems evolve, Vision-Language Large Models (VLLMs) are transforming how machines understand and interact with the world. These powerful models combine computer vision and natural language processing, enabling applications such as image captioning, visual question answering, multimodal agents, and interactive assistants that "see" and "speak".</p>
+
+  <p>While most users access these capabilities through cloud APIs from big tech platforms, there's a growing demand — and necessity — for running VLLMs <strong>locally</strong>. From privacy-conscious developers to edge-device innovators, many are choosing to bring AI inference back to the user’s machine. Thanks to tools like <a href="https://ollama.com" target="_blank">Ollama</a> and <a href="https://streamlit.io" target="_blank">Streamlit</a>, it's now possible to deploy advanced multimodal AI applications entirely offline, with minimal setup.</p>
+
+  <p>In this post, we'll explore the advantages of local VLLMs, and walk through building your own intelligent image-based chatbot using open-source models and Python tooling — all running locally on your computer.</p>
+
+  <h2>🔍 Why Local VLLMs Matter</h2>
+
+  <p>Centralized AI services offer convenience and scalability, but they come with trade-offs. Here’s why moving AI closer to the user can be a game-changer:</p>
+
+  <ul>
+    <li><strong>Privacy & Data Sovereignty:</strong> In fields like healthcare, defense, legal, or personal productivity, images and text prompts may contain sensitive data. Running models locally ensures complete control over that data.</li>
+    <li><strong>Latency & Speed:</strong> For real-time applications — such as robotics, manufacturing diagnostics, or AR — latency introduced by cloud services can break the experience. Local inference offers near-instant results.</li>
+    <li><strong>Resilience & Offline Functionality:</strong> In low-connectivity or secure environments (e.g. remote locations, air-gapped networks), local AI enables uninterrupted operation.</li>
+    <li><strong>Cost Efficiency:</strong> Using paid APIs can be prohibitively expensive for high-volume use. Running local models avoids these ongoing costs after the initial setup.</li>
+    <li><strong>Customization & Integration:</strong> Local agents can be tightly integrated with your filesystem, tools, sensors, and workflows. You can modify the prompt behavior, fine-tune models, or even combine them with other local tools like OCR engines, speech recognizers, or automation scripts.</li>
+  </ul>
+
+  <p>As open-source models like <code>LLaVA</code>, <code>MiniGPT-4</code>, and <code>BakLLaVA</code> mature, they offer capabilities rivaling cloud models — without the data-sharing risks. Developers now have a rare opportunity: to build intelligent, multimodal apps where users own the code, the models, and their data.</p>
+
+  <h2>🛠️ How to Build a Local VLLM Agent with Ollama + Streamlit</h2>
+
+  <p>Ollama makes it easy to run open-source LLMs and VLLMs locally using Docker-like workflows. We’ll combine it with Streamlit to create a user-friendly frontend for interacting with a VLLM through image uploads and text prompts.</p>
+
+  <h3>Step 1: Install Requirements</h3>
+
+  <pre><code># Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Install Streamlit
+pip install streamlit
+
+# Optional: For image handling
+pip install pillow
+</code></pre>
+
+  <h3>Step 2: Run a VLLM Model with Ollama</h3>
+
+  <p>Ollama supports models like <code>llava</code> that handle both images and text. To run LLaVA locally:</p>
+
+  <pre><code>ollama run llava</code></pre>
+
+  <p>This will download the model and expose a local API endpoint for chat and vision input.</p>
+
+  <h3>Step 3: Create Your Streamlit App</h3>
+
+  <p>Save this code as <code>app.py</code>:</p>
+
+  <pre><code>import streamlit as st
+from PIL import Image
+import requests
+import base64
+import io
+
+st.title("🖼️ Local VLLM Agent with Ollama")
+
+image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+prompt = st.text_input("Enter your prompt")
+
+if st.button("Ask"):
+    if image and prompt:
+        # Convert image to base64
+        img = Image.open(image)
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        img_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+        # Send to Ollama
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "llava",
+                "prompt": prompt,
+                "images": [img_base64],
+                "stream": False
+            }
+        )
+
+        if response.status_code == 200:
+            result = response.json()["response"]
+            st.success(result)
+        else:
+            st.error("Failed to get response from Ollama")
+    else:
+        st.warning("Please upload an image and enter a prompt.")
+</code></pre>
+
+  <h3>Step 4: Run Your App</h3>
+
+  <pre><code>streamlit run app.py</code></pre>
+
+  <p>This will open a local web interface where you can upload an image and enter a prompt to interact with the VLLM model running via Ollama.</p>
+
+  <h2>✨ Final Thoughts</h2>
+
+  <p>Local Vision-Language Models mark a turning point in AI — putting sophisticated multimodal reasoning directly into the hands of developers, researchers, and makers. By combining tools like Ollama and Streamlit, you can go from raw models to polished applications in hours — not weeks.</p>
+
+  <p>Whether you’re building educational tools, assistive tech, industrial automation, or just experimenting with AI on your own terms, running VLLMs locally opens up a future of responsible, fast, and flexible AI development.</p>
+
+  <p>Happy building! 🔧🧠📷</p>
+
+  <hr />
+  <p><small>Author: Tien Pham
